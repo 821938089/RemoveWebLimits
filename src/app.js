@@ -108,7 +108,7 @@ class App {
             }
         }
         function removeEventListener(type, listener, options){
-            if (wrapperEvents.includes(type)) {
+            if (listener.hasOwnProperty('wrapperFunc')) {
                 App.removeEventListener.call(
                     this,
                     type,

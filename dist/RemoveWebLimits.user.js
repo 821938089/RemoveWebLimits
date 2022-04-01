@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.3
+// @version     0.0.4
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -286,7 +286,7 @@ class UI {
 
 
   static registerDrag() {
-    UI.button.addEventListener('mousedown', event => {
+    App.addEventListener.call(UI.button, 'mousedown', event => {
       UI.button.style.transition = 'null';
       var disX = event.clientX - UI.button.offsetLeft;
       var disY = event.clientY - UI.button.offsetTop;
@@ -297,7 +297,7 @@ class UI {
       };
 
       App.addEventListener.call(document, 'mousemove', move);
-      document.addEventListener('mouseup', function mouseUpHandler() {
+      App.addEventListener.call(document, 'mouseup', function mouseUpHandler() {
         UI.button.style.transition = '0.3s';
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', mouseUpHandler);
@@ -434,7 +434,7 @@ class App {
     }
 
     function removeEventListener(type, listener, options) {
-      if (wrapperEvents.includes(type)) {
+      if (listener.hasOwnProperty('wrapperFunc')) {
         App.removeEventListener.call(this, type, listener.wrapperFunc, options);
       } else {
         App.removeEventListener.apply(this, arguments);

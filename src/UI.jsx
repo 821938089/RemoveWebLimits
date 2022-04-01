@@ -274,7 +274,7 @@ class UI {
 
     // 注册拖动事件
     static registerDrag() {
-        UI.button.addEventListener('mousedown', (event) => {
+        App.addEventListener.call(UI.button, 'mousedown', (event) => {
             UI.button.style.transition = 'null';
             var disX = event.clientX - UI.button.offsetLeft;
             var disY = event.clientY - UI.button.offsetTop;
@@ -284,8 +284,8 @@ class UI {
                 UI.button.style.top = event.clientY - disY + 'px';
             };
 
-            App.addEventListener.call(document,'mousemove', move);
-            document.addEventListener('mouseup', function mouseUpHandler() {
+            App.addEventListener.call(document, 'mousemove', move);
+            App.addEventListener.call(document, 'mouseup', function mouseUpHandler() {
                 UI.button.style.transition = '0.3s';
                 document.removeEventListener('mousemove', move);
                 document.removeEventListener('mouseup', mouseUpHandler);
