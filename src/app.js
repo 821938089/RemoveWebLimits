@@ -154,7 +154,8 @@ class App {
         function wrapper(event) {
             event.preventDefault = function () {};
             // Object.defineProperty(event, 'defaultPrevented', { value: false });
-            Object.defineProperty(event, 'returnValue', { set() {} });
+            // Object.defineProperty(event, 'returnValue', { set() {} });
+            // C.log(Object.getOwnPropertyDescriptor(event,'returnValue'))
             func.call(this, event);
 
             return true;
@@ -183,6 +184,7 @@ class App {
     // https://developer.chrome.com/blog/DOM-attributes-now-on-the-prototype-chain/
     // https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers
     static hookGlobalEvent2(disableEvents, wrapperEvents) {
+        Object.defineProperty(Event.prototype, 'returnValue', { set() {} });
         App.disableGlobalEvent2(disableEvents);
         App.wrapperGlobalEvent2(wrapperEvents, App.eventWrapperFunc);
     }
