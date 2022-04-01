@@ -1,0 +1,39 @@
+#rwl-setMenuSave,
+#rwl-reset,
+#rwl-setMenuClose {
+    margin: 0;
+    padding: 0 2px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    background: #fff;
+    color: #000;
+}
+#rwl-reset {
+    border: 1px solid #666;
+}
+#rwl-setMenuSave {
+    border: 1px solid green;
+}
+#rwl-setMenuClose {
+    border: 1px solid red;
+}
+#rwl-setMenu {
+    text-align: left;
+    font-size: 14px;
+    line-height: normal;
+    z-index: 999999;
+    border: 1px solid cornflowerblue;
+}
+#rwl-setMenu p {
+    margin: 5px auto;
+}
+
+#rwl-setMenu {
+    position: fixed;
+    top: 5px;
+    left: 50px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 4px;
+}

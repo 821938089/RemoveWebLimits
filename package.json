@@ -1,0 +1,36 @@
+{
+  "name": "removeweblimits",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Horis",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=12"
+  },
+  "scripts": {
+    "dev": "rollup -wc rollup.conf.js",
+    "clean": "del-cli dist",
+    "build:js": "rollup -c rollup.conf.js",
+    "prebuild": "run-s ci clean",
+    "build": "cross-env NODE_ENV=production run-s build:js",
+    "ci": "run-s lint",
+    "lint": "eslint --ext .js ."
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.16.3",
+    "@types/underscore": "^1.11.4",
+    "@violentmonkey/dom": "^2.0.2",
+    "@violentmonkey/ui": "^0.7.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.16.0",
+    "@gera2ld/plaid": "~2.4.0",
+    "@gera2ld/plaid-rollup": "~2.4.0",
+    "del-cli": "^4.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.4.1",
+    "rollup-plugin-userscript": "^0.1.1"
+  }
+}
