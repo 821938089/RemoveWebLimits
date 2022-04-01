@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.2
+// @version     0.0.3
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -480,13 +480,12 @@ class App {
     if (!func) return;
 
     function wrapper(event) {
-      event.preventDefault = function () {};
+      event.preventDefault = function () {}; // Object.defineProperty(event, 'defaultPrevented', { value: false });
 
-      Object.defineProperty(event, 'defaultPrevented', {
-        value: false
-      });
+
       Object.defineProperty(event, 'returnValue', {
-        value: true
+        set() {}
+
       });
       func.call(this, event);
       return true;

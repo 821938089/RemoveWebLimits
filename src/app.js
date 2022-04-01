@@ -153,8 +153,8 @@ class App {
         if (!func) return;
         function wrapper(event) {
             event.preventDefault = function () {};
-            Object.defineProperty(event, 'defaultPrevented', { value: false });
-            Object.defineProperty(event, 'returnValue', { value: true });
+            // Object.defineProperty(event, 'defaultPrevented', { value: false });
+            Object.defineProperty(event, 'returnValue', { set() {} });
             func.call(this, event);
 
             return true;
