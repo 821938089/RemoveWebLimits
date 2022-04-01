@@ -272,7 +272,7 @@ class UI {
         })
     }
 
-    // 增加拖动事件 func
+    // 注册拖动事件
     static registerDrag() {
         UI.button.addEventListener('mousedown', (event) => {
             UI.button.style.transition = 'null';

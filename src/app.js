@@ -129,11 +129,17 @@ class App {
     static registerElementObserve(disableEvents, wrapperEvents) {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutationRecord) => {
-                const { addedNodes } = mutationRecord;
+                const { addedNodes,attributeName,target } = mutationRecord;
                 addedNodes.forEach(element=>{
                     App.disableGlobalEvent(element, disableEvents);
                     App.warpperGlobalEvent(element, wrapperEvents);
                 }) 
+                if (attributeName && disableEvents.includes(attributeName.slice(2))) {
+                    target[attributeName] = null;
+                }
+                if (attributeName && wrapperEvents.includes(attributeName.slice(2))) {
+                    target[attributeName] = target[attributeName];
+                }
             });
         });
         observer.observe(document, {
@@ -189,10 +195,21 @@ class App {
         };
         for (const [name, target] of Object.entries(hookTargets)) {
             eventList.forEach((event) => {
-                Object.defineProperty(target, 'on' + event, {
-                    set() {},
-                    enumerable: true,
-                });
+                try {
+                    const setter = Object.getOwnPropertyDescriptor(
+                        target,
+                        'on' + event
+                    ).set;
+                    Object.defineProperty(target, 'on' + event, {
+                        set() {
+                            setter.call(this, null);
+                        },
+                        enumerable: true,
+                    });
+                } catch (e) {
+                    // C.log(`${name} 没有 ${event} 事件`, e);
+                }
+                
             });
         }
     }

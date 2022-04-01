@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.1
+// @version     0.0.2
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -282,7 +282,7 @@ class UI {
       childList: true,
       subtree: true
     });
-  } // 增加拖动事件 func
+  } // 注册拖动事件
 
 
   static registerDrag() {
@@ -451,12 +451,22 @@ class App {
     const observer = new MutationObserver(mutations => {
       mutations.forEach(mutationRecord => {
         const {
-          addedNodes
+          addedNodes,
+          attributeName,
+          target
         } = mutationRecord;
         addedNodes.forEach(element => {
           App.disableGlobalEvent(element, disableEvents);
           App.warpperGlobalEvent(element, wrapperEvents);
         });
+
+        if (attributeName && disableEvents.includes(attributeName.slice(2))) {
+          target[attributeName] = null;
+        }
+
+        if (attributeName && wrapperEvents.includes(attributeName.slice(2))) {
+          target[attributeName] = target[attributeName];
+        }
       });
     });
     observer.observe(document, {
@@ -518,11 +528,17 @@ class App {
 
     for (const [name, target] of Object.entries(hookTargets)) {
       eventList.forEach(event => {
-        Object.defineProperty(target, 'on' + event, {
-          set() {},
+        try {
+          const setter = Object.getOwnPropertyDescriptor(target, 'on' + event).set;
+          Object.defineProperty(target, 'on' + event, {
+            set() {
+              setter.call(this, null);
+            },
 
-          enumerable: true
-        });
+            enumerable: true
+          });
+        } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
+        }
       });
     }
   }
