@@ -94,6 +94,7 @@ class App {
 
     static hookEventListener(disableEvents, wrapperEvents) {
         function addEventListener(type, listener, options) {
+            if (!type || !listener) return;
             if (disableEvents.includes(type)) {
                 return;
             } else if (wrapperEvents.includes(type)) {
@@ -108,6 +109,7 @@ class App {
             }
         }
         function removeEventListener(type, listener, options){
+            if (!type || !listener) return;
             if (listener.hasOwnProperty('wrapperFunc')) {
                 App.removeEventListener.call(
                     this,
@@ -150,12 +152,12 @@ class App {
 
     // 事件包装函数
     static eventWrapperFunc(func) {
-        if (!func) return;
+        // if (!func) return;
         function wrapper(event) {
             event.preventDefault = function () {};
             // Object.defineProperty(event, 'defaultPrevented', { value: false });
             // Object.defineProperty(event, 'returnValue', { set() {} });
-            // C.log(Object.getOwnPropertyDescriptor(event,'returnValue'))
+            
             func.call(this, event);
 
             return true;
@@ -231,6 +233,7 @@ class App {
                     ).set;
                     Object.defineProperty(target, 'on' + event, {
                         set(func) {
+                            if (!func) return;
                             setter.call(this, wrapperFunc(func));
                         },
                         enumerable: true,

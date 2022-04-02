@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.5
+// @version     0.0.6
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -424,6 +424,8 @@ class App {
 
   static hookEventListener(disableEvents, wrapperEvents) {
     function addEventListener(type, listener, options) {
+      if (!type || !listener) return;
+
       if (disableEvents.includes(type)) {
         return;
       } else if (wrapperEvents.includes(type)) {
@@ -434,6 +436,8 @@ class App {
     }
 
     function removeEventListener(type, listener, options) {
+      if (!type || !listener) return;
+
       if (listener.hasOwnProperty('wrapperFunc')) {
         App.removeEventListener.call(this, type, listener.wrapperFunc, options);
       } else {
@@ -477,12 +481,10 @@ class App {
 
 
   static eventWrapperFunc(func) {
-    if (!func) return;
-
+    // if (!func) return;
     function wrapper(event) {
       event.preventDefault = function () {}; // Object.defineProperty(event, 'defaultPrevented', { value: false });
       // Object.defineProperty(event, 'returnValue', { set() {} });
-      // C.log(Object.getOwnPropertyDescriptor(event,'returnValue'))
 
 
       func.call(this, event);
@@ -557,6 +559,7 @@ class App {
           const setter = Object.getOwnPropertyDescriptor(target, 'on' + event).set;
           Object.defineProperty(target, 'on' + event, {
             set(func) {
+              if (!func) return;
               setter.call(this, wrapperFunc(func));
             },
 
