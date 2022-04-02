@@ -94,7 +94,6 @@ class App {
 
     static hookEventListener(disableEvents, wrapperEvents) {
         function addEventListener(type, listener, options) {
-            if (!type || !listener) return;
             if (disableEvents.includes(type)) {
                 return;
             } else if (wrapperEvents.includes(type)) {
@@ -109,8 +108,7 @@ class App {
             }
         }
         function removeEventListener(type, listener, options){
-            if (!type || !listener) return;
-            if (listener.hasOwnProperty('wrapperFunc')) {
+            if (listener && listener.hasOwnProperty('wrapperFunc')) {
                 App.removeEventListener.call(
                     this,
                     type,

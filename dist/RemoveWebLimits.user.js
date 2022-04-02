@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.6
+// @version     0.0.7
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -424,8 +424,6 @@ class App {
 
   static hookEventListener(disableEvents, wrapperEvents) {
     function addEventListener(type, listener, options) {
-      if (!type || !listener) return;
-
       if (disableEvents.includes(type)) {
         return;
       } else if (wrapperEvents.includes(type)) {
@@ -436,9 +434,7 @@ class App {
     }
 
     function removeEventListener(type, listener, options) {
-      if (!type || !listener) return;
-
-      if (listener.hasOwnProperty('wrapperFunc')) {
+      if (listener && listener.hasOwnProperty('wrapperFunc')) {
         App.removeEventListener.call(this, type, listener.wrapperFunc, options);
       } else {
         App.removeEventListener.apply(this, arguments);
