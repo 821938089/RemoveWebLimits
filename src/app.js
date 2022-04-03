@@ -24,6 +24,8 @@ class App {
     static host = window.location.hostname;
     static addEventListener = EventTarget.prototype.addEventListener;
     static removeEventListener = EventTarget.prototype.removeEventListener;
+    static preventDefault = Event.prototype.preventDefault
+    static returnValueSetter = Object.getOwnPropertyDescriptor(Event.prototype,'returnValue').set
 
     static init() {
         UI.init();
@@ -46,6 +48,7 @@ class App {
     }
 
     static async main() {
+        // 禁止的事件
         const disableEvents = [
             'copy',
             'cut',
@@ -56,6 +59,7 @@ class App {
             'error',
             'mousemove',
         ];
+        // 忽略阻止默认行为的事件
         const wrapperEvents = [
             'select',
             'selectstart',
@@ -68,11 +72,26 @@ class App {
         ];
         App.hookEventListener(disableEvents, wrapperEvents);
         App.hookGlobalEvent2(disableEvents, wrapperEvents);
+        App.hookDefaultEvent(wrapperEvents)
         await DOMContentLoaded();
         App.addRemoveLimitsCss();
         await DomMutation();
         App.hookGlobalEvent(disableEvents, wrapperEvents);
         App.registerElementObserve(disableEvents,wrapperEvents);
+    }
+
+    static hookDefaultEvent(wrapperEvents){
+        function preventDefault() {
+            if (wrapperEvents.includes(this.type)) return;
+            App.preventDefault.call(this);
+        }
+        Event.prototype.preventDefault = preventDefault;
+        Object.defineProperty(Event.prototype, 'returnValue', {
+            set(value) {
+                if (wrapperEvents.includes(this.type)) return;
+                App.returnValueSetter.call(this, value);
+            },
+        });
     }
 
     static addRemoveLimitsCss() {
@@ -152,10 +171,7 @@ class App {
     static eventWrapperFunc(func) {
         // if (!func) return;
         function wrapper(event) {
-            event.preventDefault = function () {};
-            // Object.defineProperty(event, 'defaultPrevented', { value: false });
-            // Object.defineProperty(event, 'returnValue', { set() {} });
-            
+
             func.call(this, event);
 
             return true;

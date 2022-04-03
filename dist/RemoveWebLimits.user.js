@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.7
+// @version     0.0.8
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -396,15 +396,34 @@ class App {
   }
 
   static async main() {
-    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove'];
+    // 禁止的事件
+    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove']; // 忽略阻止默认行为的事件
+
     const wrapperEvents = ['select', 'selectstart', 'dragstart', 'mousedown', 'mouseup', 'keydown', 'keyup', 'keypress'];
     App.hookEventListener(disableEvents, wrapperEvents);
     App.hookGlobalEvent2(disableEvents, wrapperEvents);
+    App.hookDefaultEvent(wrapperEvents);
     await DOMContentLoaded();
     App.addRemoveLimitsCss();
     await DomMutation();
     App.hookGlobalEvent(disableEvents, wrapperEvents);
     App.registerElementObserve(disableEvents, wrapperEvents);
+  }
+
+  static hookDefaultEvent(wrapperEvents) {
+    function preventDefault() {
+      if (wrapperEvents.includes(this.type)) return;
+      App.preventDefault.call(this);
+    }
+
+    Event.prototype.preventDefault = preventDefault;
+    Object.defineProperty(Event.prototype, 'returnValue', {
+      set(value) {
+        if (wrapperEvents.includes(this.type)) return;
+        App.returnValueSetter.call(this, value);
+      }
+
+    });
   }
 
   static addRemoveLimitsCss() {
@@ -479,10 +498,6 @@ class App {
   static eventWrapperFunc(func) {
     // if (!func) return;
     function wrapper(event) {
-      event.preventDefault = function () {}; // Object.defineProperty(event, 'defaultPrevented', { value: false });
-      // Object.defineProperty(event, 'returnValue', { set() {} });
-
-
       func.call(this, event);
       return true;
     }
@@ -572,6 +587,8 @@ class App {
 App.host = window.location.hostname;
 App.addEventListener = EventTarget.prototype.addEventListener;
 App.removeEventListener = EventTarget.prototype.removeEventListener;
+App.preventDefault = Event.prototype.preventDefault;
+App.returnValueSetter = Object.getOwnPropertyDescriptor(Event.prototype, 'returnValue').set;
 
 // import { getGreetings } from './app';
 toggleConsole(true);
