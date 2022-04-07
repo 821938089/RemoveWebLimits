@@ -27,6 +27,7 @@ export function DomMutation() {
 }
 
 export function getPropertyDescriptor(o, prop) {
+    // 替代方法 Object.getPrototypeOf()
     let obj = o;
     while (!obj.hasOwnProperty(prop)) {
         if (obj.__proto__) {

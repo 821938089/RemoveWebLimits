@@ -58,6 +58,7 @@ class App {
             'beforeprint',
             'error',
             'mousemove',
+            'paste',
         ];
         // 忽略阻止默认行为的事件
         const wrapperEvents = [

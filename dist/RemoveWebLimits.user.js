@@ -397,7 +397,7 @@ class App {
 
   static async main() {
     // 禁止的事件
-    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove']; // 忽略阻止默认行为的事件
+    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste']; // 忽略阻止默认行为的事件
 
     const wrapperEvents = ['select', 'selectstart', 'dragstart', 'mousedown', 'mouseup', 'keydown', 'keyup', 'keypress'];
     App.hookEventListener(disableEvents, wrapperEvents);
