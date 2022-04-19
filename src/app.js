@@ -15,7 +15,7 @@
 
 import Setting from './setting';
 import UI from './UI';
-import { DOMContentLoaded, DomMutation, getPropertyDescriptor } from './lib';
+import { DOMContentLoaded, DomMutation } from './lib';
 import removeLimitsStyle from './removeLimits.css'
 import { C } from './log';
 
@@ -59,6 +59,7 @@ class App {
             'error',
             'mousemove',
             'paste',
+            'mouseout',
         ];
         // 忽略阻止默认行为的事件
         const wrapperEvents = [
@@ -77,8 +78,8 @@ class App {
         await DOMContentLoaded();
         App.addRemoveLimitsCss();
         await DomMutation();
-        App.hookGlobalEvent(disableEvents, wrapperEvents);
         App.registerElementObserve(disableEvents,wrapperEvents);
+        App.hookGlobalEvent(disableEvents, wrapperEvents);
     }
 
     static hookDefaultEvent(wrapperEvents){
@@ -102,9 +103,8 @@ class App {
     // 全局事件清理
     // 全局事件参考 https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers
     static hookGlobalEvent(disableEvents, wrapperEvents) {
-        const allElements = Array.prototype.slice.call(
-            document.getElementsByTagName('*')
-        );
+        const allElements = [...document.getElementsByTagName('*')];
+
         allElements.push(document, document.body, window);
         allElements.forEach((element) => {
             App.disableGlobalEvent(element, disableEvents);
@@ -149,28 +149,40 @@ class App {
     static registerElementObserve(disableEvents, wrapperEvents) {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutationRecord) => {
-                const { addedNodes,attributeName,target } = mutationRecord;
-                addedNodes.forEach(element=>{
-                    App.disableGlobalEvent(element, disableEvents);
-                    App.warpperGlobalEvent(element, wrapperEvents);
-                }) 
-                if (attributeName && disableEvents.includes(attributeName.slice(2))) {
-                    target[attributeName] = null;
-                }
-                if (attributeName && wrapperEvents.includes(attributeName.slice(2))) {
-                    target[attributeName] = target[attributeName];
+                const { addedNodes, attributeName, target, type } = mutationRecord;
+
+                switch (type) {
+                    case 'childList':
+                        addedNodes.forEach((element) => {
+                            App.disableGlobalEvent(element, disableEvents);
+                            App.warpperGlobalEvent(element, wrapperEvents);
+                        });
+                        break;
+                    case 'attributes':
+                        if (disableEvents.includes(attributeName.slice(2))) {
+                            target[attributeName] = null;
+                        }
+                        if (wrapperEvents.includes(attributeName.slice(2))) {
+                            target[attributeName] = target[attributeName];
+                        }
+                        break;
+                    default:
+                        break;
                 }
             });
         });
         observer.observe(document, {
             childList: true,
             subtree: true,
+            attributes: true,
+            attributeFilter: disableEvents
+                .concat(wrapperEvents)
+                .map((event) => 'on' + event),
         });
     }
 
     // 事件包装函数
     static eventWrapperFunc(func) {
-        // if (!func) return;
         function wrapper(event) {
 
             func.call(this, event);
@@ -183,7 +195,7 @@ class App {
 
     static disableGlobalEvent(element, eventList) {
         eventList.forEach((event) => {
-            if ('removeAttribute' in element) {
+            if ('removeAttribute' in element && element[event]) {
                 element.removeAttribute('on' + event);
             }
             
@@ -201,7 +213,6 @@ class App {
     // https://developer.chrome.com/blog/DOM-attributes-now-on-the-prototype-chain/
     // https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers
     static hookGlobalEvent2(disableEvents, wrapperEvents) {
-        Object.defineProperty(Event.prototype, 'returnValue', { set() {} });
         App.disableGlobalEvent2(disableEvents);
         App.wrapperGlobalEvent2(wrapperEvents, App.eventWrapperFunc);
     }
@@ -223,7 +234,6 @@ class App {
                         set() {
                             setter.call(this, null);
                         },
-                        enumerable: true,
                     });
                 } catch (e) {
                     // C.log(`${name} 没有 ${event} 事件`, e);
@@ -251,7 +261,6 @@ class App {
                             if (!func) return;
                             setter.call(this, wrapperFunc(func));
                         },
-                        enumerable: true,
                     });
                 } catch (e) {
                     // C.log(`${name} 没有 ${event} 事件`, e);

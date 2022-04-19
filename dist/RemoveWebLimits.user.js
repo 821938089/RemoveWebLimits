@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.8
+// @version     0.0.9
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -93,23 +93,23 @@ function DOMContentLoaded() {
 }
 function DomMutation() {
   return new Promise(resolve => {
-    const throttled = _.throttle(() => {
+    const debounced = _.debounce(() => {
       observer.disconnect();
       resolve();
     }, 500);
 
-    const observer = new MutationObserver(() => throttled());
+    const observer = new MutationObserver(debounced);
     observer.observe(document, {
       childList: true,
       subtree: true
     });
-    throttled();
+    debounced();
   });
 }
 
 var css_248z$2 = "#rwl-iqxin{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl-iqxin input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl-iqxin.rwl-active-iqxin{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl-iqxin label{font-weight:500;margin:0;padding:0}#rwl-iqxin #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
 
-var css_248z$1 = "#rwl-reset,#rwl-setMenuClose,#rwl-setMenuSave{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0;padding:0 2px}#rwl-reset{border:1px solid #666}#rwl-setMenuSave{border:1px solid green}#rwl-setMenuClose{border:1px solid red}#rwl-setMenu{border:1px solid #6495ed;font-size:14px;line-height:normal;text-align:left;z-index:999999}#rwl-setMenu p{margin:5px auto}#rwl-setMenu{background:#fff;border-radius:4px;left:50px;padding:10px;position:fixed;top:5px}";
+var css_248z$1 = "#rwl-reset,#rwl-setMenuClose,#rwl-setMenuSave{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0;padding:0 2px}#rwl-reset{border:1px solid #666}#rwl-setMenuSave{border:1px solid green}#rwl-setMenuClose{border:1px solid red}#rwl-setMenu{border:1px solid #6495ed;font-size:14px;line-height:normal;text-align:left;z-index:999999}#rwl-setMenu p{margin:5px auto}#rwl-setMenu{background:#fff;border-radius:4px;left:50px;padding:10px;position:fixed;top:5px}#rwl-setMenu>textarea{font:unset}";
 
 class UI {
   static async init() {
@@ -397,7 +397,7 @@ class App {
 
   static async main() {
     // 禁止的事件
-    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste']; // 忽略阻止默认行为的事件
+    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste', 'mouseout']; // 忽略阻止默认行为的事件
 
     const wrapperEvents = ['select', 'selectstart', 'dragstart', 'mousedown', 'mouseup', 'keydown', 'keyup', 'keypress'];
     App.hookEventListener(disableEvents, wrapperEvents);
@@ -406,8 +406,8 @@ class App {
     await DOMContentLoaded();
     App.addRemoveLimitsCss();
     await DomMutation();
-    App.hookGlobalEvent(disableEvents, wrapperEvents);
     App.registerElementObserve(disableEvents, wrapperEvents);
+    App.hookGlobalEvent(disableEvents, wrapperEvents);
   }
 
   static hookDefaultEvent(wrapperEvents) {
@@ -433,7 +433,7 @@ class App {
 
 
   static hookGlobalEvent(disableEvents, wrapperEvents) {
-    const allElements = Array.prototype.slice.call(document.getElementsByTagName('*'));
+    const allElements = [...document.getElementsByTagName('*')];
     allElements.push(document, document.body, window);
     allElements.forEach(element => {
       App.disableGlobalEvent(element, disableEvents);
@@ -472,31 +472,41 @@ class App {
         const {
           addedNodes,
           attributeName,
-          target
+          target,
+          type
         } = mutationRecord;
-        addedNodes.forEach(element => {
-          App.disableGlobalEvent(element, disableEvents);
-          App.warpperGlobalEvent(element, wrapperEvents);
-        });
 
-        if (attributeName && disableEvents.includes(attributeName.slice(2))) {
-          target[attributeName] = null;
-        }
+        switch (type) {
+          case 'childList':
+            addedNodes.forEach(element => {
+              App.disableGlobalEvent(element, disableEvents);
+              App.warpperGlobalEvent(element, wrapperEvents);
+            });
+            break;
 
-        if (attributeName && wrapperEvents.includes(attributeName.slice(2))) {
-          target[attributeName] = target[attributeName];
+          case 'attributes':
+            if (disableEvents.includes(attributeName.slice(2))) {
+              target[attributeName] = null;
+            }
+
+            if (wrapperEvents.includes(attributeName.slice(2))) {
+              target[attributeName] = target[attributeName];
+            }
+
+            break;
         }
       });
     });
     observer.observe(document, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: disableEvents.concat(wrapperEvents).map(event => 'on' + event)
     });
   } // 事件包装函数
 
 
   static eventWrapperFunc(func) {
-    // if (!func) return;
     function wrapper(event) {
       func.call(this, event);
       return true;
@@ -508,7 +518,7 @@ class App {
 
   static disableGlobalEvent(element, eventList) {
     eventList.forEach(event => {
-      if ('removeAttribute' in element) {
+      if ('removeAttribute' in element && element[event]) {
         element.removeAttribute('on' + event);
       }
     });
@@ -525,10 +535,6 @@ class App {
 
 
   static hookGlobalEvent2(disableEvents, wrapperEvents) {
-    Object.defineProperty(Event.prototype, 'returnValue', {
-      set() {}
-
-    });
     App.disableGlobalEvent2(disableEvents);
     App.wrapperGlobalEvent2(wrapperEvents, App.eventWrapperFunc);
   }
@@ -547,9 +553,8 @@ class App {
           Object.defineProperty(target, 'on' + event, {
             set() {
               setter.call(this, null);
-            },
+            }
 
-            enumerable: true
           });
         } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
         }
@@ -572,9 +577,8 @@ class App {
             set(func) {
               if (!func) return;
               setter.call(this, wrapperFunc(func));
-            },
+            }
 
-            enumerable: true
           });
         } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
         }

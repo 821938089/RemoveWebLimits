@@ -13,16 +13,16 @@ export function DOMContentLoaded() {
 
 export function DomMutation() {
     return new Promise((resolve) => {
-        const throttled = _.throttle(() => {
+        const debounced = _.debounce(() => {
             observer.disconnect();
             resolve();
         }, 500);
-        const observer = new MutationObserver(() => throttled());
+        const observer = new MutationObserver(debounced);
         observer.observe(document, {
             childList: true,
             subtree: true,
         });
-        throttled();
+        debounced();
     });
 }
 
