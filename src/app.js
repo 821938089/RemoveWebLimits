@@ -195,7 +195,7 @@ class App {
 
     static disableGlobalEvent(element, eventList) {
         eventList.forEach((event) => {
-            if ('removeAttribute' in element && element[event]) {
+            if ('removeAttribute' in element && element['on' + event]) {
                 element.removeAttribute('on' + event);
             }
             

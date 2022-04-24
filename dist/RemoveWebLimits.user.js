@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.0.9
+// @version     0.1.0
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -518,7 +518,7 @@ class App {
 
   static disableGlobalEvent(element, eventList) {
     eventList.forEach(event => {
-      if ('removeAttribute' in element && element[event]) {
+      if ('removeAttribute' in element && element['on' + event]) {
         element.removeAttribute('on' + event);
       }
     });
