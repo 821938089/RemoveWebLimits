@@ -16,16 +16,18 @@
 import Setting from './setting';
 import UI from './UI';
 import { DOMContentLoaded, DomMutation } from './lib';
-import removeLimitsStyle from './removeLimits.css'
+import removeLimitsStyle from './removeLimits.css';
 import { C } from './log';
-
 
 class App {
     static host = window.location.hostname;
     static addEventListener = EventTarget.prototype.addEventListener;
     static removeEventListener = EventTarget.prototype.removeEventListener;
-    static preventDefault = Event.prototype.preventDefault
-    static returnValueSetter = Object.getOwnPropertyDescriptor(Event.prototype,'returnValue').set
+    static preventDefault = Event.prototype.preventDefault;
+    static returnValueSetter = Object.getOwnPropertyDescriptor(
+        Event.prototype,
+        'returnValue'
+    ).set;
 
     static init() {
         UI.init();
@@ -35,9 +37,7 @@ class App {
             C.log(`${App.host} 在黑名单中，开始清理`);
             App.main();
         } else if (window.self !== window.top) {
-            C.log(
-                `[iframe] ${App.host} 不在黑名单中，如有需要请手动添加`
-            );
+            C.log(`[iframe] ${App.host} 不在黑名单中，如有需要请手动添加`);
         } else {
             C.log(`${App.host} 不在黑名单中`);
         }
@@ -74,20 +74,24 @@ class App {
         ];
         App.hookEventListener(disableEvents, wrapperEvents);
         App.hookGlobalEvent2(disableEvents, wrapperEvents);
-        App.hookDefaultEvent(wrapperEvents)
+        App.hookDefaultEvent(wrapperEvents);
         await DOMContentLoaded();
         App.addRemoveLimitsCss();
         await DomMutation();
-        App.registerElementObserve(disableEvents,wrapperEvents);
+        App.registerElementObserve(disableEvents, wrapperEvents);
         App.hookGlobalEvent(disableEvents, wrapperEvents);
     }
 
-    static hookDefaultEvent(wrapperEvents){
-        function preventDefault() {
-            if (wrapperEvents.includes(this.type)) return;
-            App.preventDefault.call(this);
-        }
-        Event.prototype.preventDefault = preventDefault;
+    static hookDefaultEvent(wrapperEvents) {
+        Event.prototype.preventDefault = new Proxy(
+            Event.prototype.preventDefault,
+            {
+                apply(target, thisArg, argumentsList) {
+                    if (wrapperEvents.includes(thisArg.type)) return;
+                    Reflect.apply(target, thisArg, argumentsList);
+                },
+            }
+        );
         Object.defineProperty(Event.prototype, 'returnValue', {
             set(value) {
                 if (wrapperEvents.includes(this.type)) return;
@@ -113,43 +117,54 @@ class App {
     }
 
     static hookEventListener(disableEvents, wrapperEvents) {
-        function addEventListener(type, listener, options) {
-            if (disableEvents.includes(type)) {
-                return;
-            } else if (wrapperEvents.includes(type)) {
-                App.addEventListener.call(
-                    this,
-                    type,
-                    App.eventWrapperFunc(listener),
-                    options
-                );
-            } else {
-                App.addEventListener.apply(this, arguments);
+        const addEventListenerProxy = new Proxy(
+            EventTarget.prototype.addEventListener,
+            {
+                apply(target, thisArg, argumentsList) {
+                    const [type, listener, options] = argumentsList;
+                    if (disableEvents.includes(type)) return;
+                    if (wrapperEvents.includes(type)) {
+                        target.call(
+                            thisArg,
+                            type,
+                            App.eventWrapperFunc(listener),
+                            options
+                        );
+                    } else {
+                        Reflect.apply(target, thisArg, argumentsList);
+                    }
+                },
             }
-        }
-        function removeEventListener(type, listener, options){
-            if (listener && listener.hasOwnProperty('wrapperFunc')) {
-                App.removeEventListener.call(
-                    this,
-                    type,
-                    listener.wrapperFunc,
-                    options
-                );
-            } else {
-                App.removeEventListener.apply(this, arguments);
+        );
+        const removeEventListenerProxy = new Proxy(
+            EventTarget.prototype.removeEventListener,
+            {
+                apply(target, thisArg, argumentsList) {
+                    const [type, listener, options] = argumentsList;
+                    if (listener && listener.hasOwnProperty('wrapperFunc')) {
+                        target.call(
+                            thisArg,
+                            type,
+                            listener.wrapperFunc,
+                            options
+                        );
+                    } else {
+                        Reflect.apply(target, thisArg, argumentsList);
+                    }
+                },
             }
-        }
-        EventTarget.prototype.addEventListener = addEventListener;
-        document.addEventListener = addEventListener;
-        EventTarget.prototype.removeEventListener = removeEventListener;
-        document.removeEventListener = removeEventListener;
-
+        );
+        EventTarget.prototype.addEventListener = addEventListenerProxy;
+        document.addEventListener = addEventListenerProxy;
+        EventTarget.prototype.removeEventListener = removeEventListenerProxy;
+        document.removeEventListener = removeEventListenerProxy;
     }
 
     static registerElementObserve(disableEvents, wrapperEvents) {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutationRecord) => {
-                const { addedNodes, attributeName, target, type } = mutationRecord;
+                const { addedNodes, attributeName, target, type } =
+                    mutationRecord;
 
                 switch (type) {
                     case 'childList':
@@ -184,7 +199,6 @@ class App {
     // 事件包装函数
     static eventWrapperFunc(func) {
         function wrapper(event) {
-
             func.call(this, event);
 
             return true;
@@ -198,13 +212,15 @@ class App {
             if ('removeAttribute' in element && element['on' + event]) {
                 element.removeAttribute('on' + event);
             }
-            
         });
     }
-    
+
     static warpperGlobalEvent(element, eventList) {
         eventList.forEach((event) => {
-            if ('on' + event in element && element['on' + event] !== App.eventWrapperFunc) {
+            if (
+                'on' + event in element &&
+                element['on' + event] !== App.eventWrapperFunc
+            ) {
                 element['on' + event] = element['on' + event];
             }
         });
@@ -238,7 +254,6 @@ class App {
                 } catch (e) {
                     // C.log(`${name} 没有 ${event} 事件`, e);
                 }
-                
             });
         }
     }

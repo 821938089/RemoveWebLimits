@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.1.0
+// @version     0.1.1
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -411,12 +411,13 @@ class App {
   }
 
   static hookDefaultEvent(wrapperEvents) {
-    function preventDefault() {
-      if (wrapperEvents.includes(this.type)) return;
-      App.preventDefault.call(this);
-    }
+    Event.prototype.preventDefault = new Proxy(Event.prototype.preventDefault, {
+      apply(target, thisArg, argumentsList) {
+        if (wrapperEvents.includes(thisArg.type)) return;
+        Reflect.apply(target, thisArg, argumentsList);
+      }
 
-    Event.prototype.preventDefault = preventDefault;
+    });
     Object.defineProperty(Event.prototype, 'returnValue', {
       set(value) {
         if (wrapperEvents.includes(this.type)) return;
@@ -442,28 +443,35 @@ class App {
   }
 
   static hookEventListener(disableEvents, wrapperEvents) {
-    function addEventListener(type, listener, options) {
-      if (disableEvents.includes(type)) {
-        return;
-      } else if (wrapperEvents.includes(type)) {
-        App.addEventListener.call(this, type, App.eventWrapperFunc(listener), options);
-      } else {
-        App.addEventListener.apply(this, arguments);
-      }
-    }
+    const addEventListenerProxy = new Proxy(EventTarget.prototype.addEventListener, {
+      apply(target, thisArg, argumentsList) {
+        const [type, listener, options] = argumentsList;
+        if (disableEvents.includes(type)) return;
 
-    function removeEventListener(type, listener, options) {
-      if (listener && listener.hasOwnProperty('wrapperFunc')) {
-        App.removeEventListener.call(this, type, listener.wrapperFunc, options);
-      } else {
-        App.removeEventListener.apply(this, arguments);
+        if (wrapperEvents.includes(type)) {
+          target.call(thisArg, type, App.eventWrapperFunc(listener), options);
+        } else {
+          Reflect.apply(target, thisArg, argumentsList);
+        }
       }
-    }
 
-    EventTarget.prototype.addEventListener = addEventListener;
-    document.addEventListener = addEventListener;
-    EventTarget.prototype.removeEventListener = removeEventListener;
-    document.removeEventListener = removeEventListener;
+    });
+    const removeEventListenerProxy = new Proxy(EventTarget.prototype.removeEventListener, {
+      apply(target, thisArg, argumentsList) {
+        const [type, listener, options] = argumentsList;
+
+        if (listener && listener.hasOwnProperty('wrapperFunc')) {
+          target.call(thisArg, type, listener.wrapperFunc, options);
+        } else {
+          Reflect.apply(target, thisArg, argumentsList);
+        }
+      }
+
+    });
+    EventTarget.prototype.addEventListener = addEventListenerProxy;
+    document.addEventListener = addEventListenerProxy;
+    EventTarget.prototype.removeEventListener = removeEventListenerProxy;
+    document.removeEventListener = removeEventListenerProxy;
   }
 
   static registerElementObserve(disableEvents, wrapperEvents) {
