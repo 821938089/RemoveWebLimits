@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.1.1
+// @version     0.1.2
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -79,7 +79,7 @@ class Setting {
 var Setting$1 = new Setting();
 
 // 等待 DOMContentLoaded 事件触发
-function DOMContentLoaded() {
+function domContentLoaded() {
   if (document.readyState === 'loading') {
     return new Promise(resolve => {
       function handler() {
@@ -91,23 +91,62 @@ function DOMContentLoaded() {
     });
   }
 }
-function DomMutation() {
+function domMutation() {
   return new Promise(resolve => {
-    const debounced = _.debounce(() => {
+    const fn = _.debounce(() => {
       observer.disconnect();
       resolve();
     }, 500);
 
-    const observer = new MutationObserver(debounced);
+    const observer = new MutationObserver(fn);
     observer.observe(document, {
       childList: true,
       subtree: true
     });
-    debounced();
+    fn();
+  });
+}
+const _regexCache = {};
+/**
+ * 将字符串编译为正则
+ * @param {RegExp | string} obj
+ * @param {string} flag
+ * @returns {RegExp}
+ */
+
+function toRE(obj, flag = 'igm') {
+  if (obj instanceof RegExp) {
+    return obj;
+  } else if (_regexCache[obj] && _regexCache[obj][flag]) {
+    const re = _regexCache[obj][flag];
+    re.lastIndex = 0;
+    return re;
+  } else if (!_regexCache[obj]) {
+    const re = new RegExp(obj, flag);
+    _regexCache[obj] = {
+      [flag]: re
+    };
+    return re;
+  } else if (!_regexCache[obj][flag]) {
+    const re = new RegExp(obj, flag);
+    _regexCache[obj][flag] = re;
+    return re;
+  }
+}
+function setPropReadOnly(obj, prop, target) {
+  const value = target != null ? target : obj[prop];
+  Object.defineProperty(obj, prop, {
+    get() {
+      return value;
+    },
+
+    set() {},
+
+    configurable: true
   });
 }
 
-var css_248z$2 = "#rwl-iqxin{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl-iqxin input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl-iqxin.rwl-active-iqxin{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl-iqxin label{font-weight:500;margin:0;padding:0}#rwl-iqxin #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
+var css_248z$2 = "#rwl{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl.rwl-active{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl label{font-weight:500;margin:0;padding:0}#rwl #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
 
 var css_248z$1 = "#rwl-reset,#rwl-setMenuClose,#rwl-setMenuSave{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0;padding:0 2px}#rwl-reset{border:1px solid #666}#rwl-setMenuSave{border:1px solid green}#rwl-setMenuClose{border:1px solid red}#rwl-setMenu{border:1px solid #6495ed;font-size:14px;line-height:normal;text-align:left;z-index:999999}#rwl-setMenu p{margin:5px auto}#rwl-setMenu{background:#fff;border-radius:4px;left:50px;padding:10px;position:fixed;top:5px}#rwl-setMenu>textarea{font:unset}";
 
@@ -125,9 +164,9 @@ class UI {
 
   static async initButtonElement() {
     // 等待 DOM 初始化
-    await DOMContentLoaded();
+    await domContentLoaded();
     const buttonStyle = `position: fixed;
-            top: ${this.buttonHeight()}px;
+            top: ${UI.buttonHeight()}px;
             left: ${Setting$1.positionLeft}px;
             right: ${Setting$1.positionRight}px;`;
     UI.checkBox = VM.hm("input", {
@@ -135,17 +174,17 @@ class UI {
       id: "black_node",
       checked: App.inBlackList()
     });
-    UI.setButton = VM.hm("qxinbutton", {
-      type: "qxinbutton",
+    UI.setButton = VM.hm("button", {
+      type: "button",
       id: "rwl-setbtn"
     }, ' ', "set", ' ');
     UI.button = VM.hm("div", {
-      id: "rwl-iqxin",
+      id: "rwl",
       className: "rwl-exempt",
       style: buttonStyle
-    }, UI.setButton, VM.hm("lalala", {
+    }, UI.setButton, VM.hm("label", {
       style: "cursor:move; font-size:12px;"
-    }, "\u9650\u5236\u89E3\u9664 "), UI.checkBox, VM.hm("style", null, Setting$1.addBtn ? css_248z$2 : css_248z$2 + '#rwl-iqxin{display:none}'));
+    }, "\u9650\u5236\u89E3\u9664 "), UI.checkBox, VM.hm("style", null, Setting$1.addBtn ? css_248z$2 : css_248z$2 + '#rwl{display:none}'));
     document.body.appendChild(UI.button);
   }
 
@@ -156,11 +195,11 @@ class UI {
     };
 
     UI.button.addEventListener('mouseover', () => {
-      UI.button.classList.add('rwl-active-iqxin');
+      UI.button.classList.add('rwl-active');
     });
     UI.button.addEventListener('mouseleave', () => {
       setTimeout(() => {
-        UI.button.classList.remove('rwl-active-iqxin');
+        UI.button.classList.remove('rwl-active');
         UI.updateBlackList(UI.isChecked());
       }, 100);
     }); // 给按钮绑定点击事件
@@ -220,13 +259,13 @@ class UI {
         settingData = this.value;
         Setting$1.blackList = JSON.parse(this.value);
       }
-    }, JSON.stringify(Setting$1.blackList, false, 4)), VM.hm("br", null), VM.hm("qxinbutton", {
+    }, JSON.stringify(Setting$1.blackList, false, 4)), VM.hm("br", null), VM.hm("button", {
       id: "rwl-reset",
       onclick: () => {
         Setting$1.reset();
         window.location.reload();
       }
-    }, "\u6E05\u7A7A\u8BBE\u7F6E"), ' ', "\xA0\xA0\xA0", VM.hm("qxinbutton", {
+    }, "\u6E05\u7A7A\u8BBE\u7F6E"), ' ', "\xA0\xA0\xA0", VM.hm("button", {
       id: "rwl-setMenuSave",
       onclick: () => {
         if (!settingData) {
@@ -244,7 +283,7 @@ class UI {
         Setting$1.save();
         window.location.reload();
       }
-    }, "\u4FDD\u5B58"), ' ', "\xA0\xA0\xA0", VM.hm("qxinbutton", {
+    }, "\u4FDD\u5B58"), ' ', "\xA0\xA0\xA0", VM.hm("button", {
       id: "rwl-setMenuClose",
       onclick: () => {
         UI.toggleMenu();
@@ -265,7 +304,7 @@ class UI {
   static checkExist() {
     if (window.self !== window.top) return;
 
-    if (!document.querySelector('#rwl-iqxin')) {
+    if (!document.querySelector('#rwl')) {
       document.body.appendChild(UI.button);
     }
 
@@ -374,20 +413,71 @@ function toggleConsole(debug) {
   }
 }
 
+/**
+ * @typedef Site
+ * @prop {string} siteName
+ * @prop {string | RegExp} url
+ * @prop {string[]} disableEvents
+ * @prop {object} wrapperEvents
+ */
+/**@type {Site} */
+
+const sites = [{
+  siteName: '起点阅读',
+  url: 'https://read.qidian.com/chapter/.*?/.*?/',
+  disableEvents: ['copy', 'cut', 'contextmenu', 'error'],
+  wrapperEvents: {
+    $events: [],
+
+    click(event) {
+      const props = ['screenX', 'screenY', 'clientX', 'clientY', 'pageX', 'pageY'];
+      props.forEach(p => setPropReadOnly(event, p, 0));
+    }
+
+  }
+}];
+
+/**
+ * @typedef {import('./sites').Site} Site
+ */
+
+/**
+ * 获取站点信息
+ * @returns {Site}
+ */
+
+function getSiteInfo() {
+  const {
+    href
+  } = location;
+  return sites.find(({
+    url
+  }) => url && toRE(url).test(href));
+}
+
 // global CSS
+/**@typedef {import('./rule').Site} Site */
+
+console.clear = () => {};
 
 class App {
+  /**@type {Site} */
   static init() {
     UI.init();
     C.log('脚本: 复制限制解除(改) --- 开始执行 --- ');
+    App.siteInfo = getSiteInfo();
 
-    if (this.inBlackList()) {
-      C.log(`${App.host} 在黑名单中，开始清理`);
-      App.main();
-    } else if (window.self !== window.top) {
-      C.log(`[iframe] ${App.host} 不在黑名单中，如有需要请手动添加`);
+    if (App.siteInfo) {
+      this.initEventDefender(App.siteInfo);
     } else {
-      C.log(`${App.host} 不在黑名单中`);
+      if (this.inBlackList()) {
+        C.log(`${App.host} 在黑名单中，开始清理`);
+        App.main();
+      } else if (window.self !== window.top) {
+        C.log(`[iframe] ${App.host} 不在黑名单中，如有需要请手动添加`);
+      } else {
+        C.log(`${App.host} 不在黑名单中`);
+      }
     }
   }
 
@@ -395,32 +485,56 @@ class App {
     return Setting$1.blackList.some(e => e === App.host);
   }
 
-  static async main() {
-    // 禁止的事件
-    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste', 'mouseout']; // 忽略阻止默认行为的事件
-
-    const wrapperEvents = ['select', 'selectstart', 'dragstart', 'mousedown', 'mouseup', 'keydown', 'keyup', 'keypress'];
+  static async initEventDefender(siteInfo) {
+    // 自定义规则模式
+    C.log('自定义规则模式');
+    const {
+      disableEvents,
+      wrapperEvents
+    } = siteInfo;
     App.hookEventListener(disableEvents, wrapperEvents);
     App.hookGlobalEvent2(disableEvents, wrapperEvents);
     App.hookDefaultEvent(wrapperEvents);
-    await DOMContentLoaded();
+    await domContentLoaded();
     App.addRemoveLimitsCss();
-    await DomMutation();
+    await domMutation();
+    App.registerElementObserve(disableEvents, wrapperEvents);
+    App.hookGlobalEvent(disableEvents, wrapperEvents);
+  }
+
+  static async main() {
+    // 自动模式
+    // 禁止的事件
+    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste', 'mouseout']; // 忽略阻止默认行为的事件
+
+    const wrapperEvents = {
+      $events: ['select', 'selectstart', 'dragstart', 'mousedown', 'mouseup', 'keydown', 'keyup', 'keypress']
+    };
+    App.hookEventListener(disableEvents, wrapperEvents);
+    App.hookGlobalEvent2(disableEvents, wrapperEvents);
+    App.hookDefaultEvent(wrapperEvents);
+    await domContentLoaded();
+    App.addRemoveLimitsCss();
+    await domMutation();
     App.registerElementObserve(disableEvents, wrapperEvents);
     App.hookGlobalEvent(disableEvents, wrapperEvents);
   }
 
   static hookDefaultEvent(wrapperEvents) {
+    const {
+      $events
+    } = wrapperEvents;
+    if (!$events) return;
     Event.prototype.preventDefault = new Proxy(Event.prototype.preventDefault, {
       apply(target, thisArg, argumentsList) {
-        if (wrapperEvents.includes(thisArg.type)) return;
+        if ($events.includes(thisArg.type)) return;
         Reflect.apply(target, thisArg, argumentsList);
       }
 
     });
     Object.defineProperty(Event.prototype, 'returnValue', {
       set(value) {
-        if (wrapperEvents.includes(this.type)) return;
+        if ($events.includes(this.type)) return;
         App.returnValueSetter.call(this, value);
       }
 
@@ -446,10 +560,25 @@ class App {
     const addEventListenerProxy = new Proxy(EventTarget.prototype.addEventListener, {
       apply(target, thisArg, argumentsList) {
         const [type, listener, options] = argumentsList;
+        const {
+          $events
+        } = wrapperEvents;
+        const events = Object.keys(wrapperEvents).filter(k => k !== '$events');
         if (disableEvents.includes(type)) return;
 
-        if (wrapperEvents.includes(type)) {
+        if ($events.includes(type)) {
           target.call(thisArg, type, App.eventWrapperFunc(listener), options);
+        } else if (events.includes(type)) {
+          const listenerProxy = new Proxy(listener, {
+            apply(target, thisArg, argumentsList) {
+              const [event] = argumentsList;
+              const ret1 = wrapperEvents[type](event);
+              const ret2 = Reflect.apply(target, thisArg, argumentsList);
+              return ret1 != null ? ret1 : ret2;
+            }
+
+          });
+          target.call(thisArg, type, listenerProxy, options);
         } else {
           Reflect.apply(target, thisArg, argumentsList);
         }
@@ -486,10 +615,10 @@ class App {
 
         switch (type) {
           case 'childList':
-            addedNodes.forEach(element => {
-              App.disableGlobalEvent(element, disableEvents);
-              App.warpperGlobalEvent(element, wrapperEvents);
-            });
+            // addedNodes.forEach(element => {
+            //   App.disableGlobalEvent(element, disableEvents)
+            //   App.warpperGlobalEvent(element, wrapperEvents)
+            // })
             break;
 
           case 'attributes':
@@ -532,8 +661,11 @@ class App {
     });
   }
 
-  static warpperGlobalEvent(element, eventList) {
-    eventList.forEach(event => {
+  static warpperGlobalEvent(element, wrapperEvents) {
+    const {
+      $events
+    } = wrapperEvents;
+    $events.forEach(event => {
       if ('on' + event in element && element['on' + event] !== App.eventWrapperFunc) {
         element['on' + event] = element['on' + event];
       }
@@ -544,7 +676,7 @@ class App {
 
   static hookGlobalEvent2(disableEvents, wrapperEvents) {
     App.disableGlobalEvent2(disableEvents);
-    App.wrapperGlobalEvent2(wrapperEvents, App.eventWrapperFunc);
+    App.wrapperGlobalEvent2(wrapperEvents);
   }
 
   static disableGlobalEvent2(eventList) {
@@ -570,21 +702,50 @@ class App {
     }
   }
 
-  static wrapperGlobalEvent2(eventList, wrapperFunc) {
+  static wrapperGlobalEvent2(wrapperEvents) {
     const hookTargets = {
       window: unsafeWindow,
       Document: Document.prototype,
       HTMLElement: HTMLElement.prototype
     };
+    const {
+      $events
+    } = wrapperEvents;
+    const events = Object.keys(wrapperEvents).filter(k => k !== '$events');
 
     for (const [name, target] of Object.entries(hookTargets)) {
-      eventList.forEach(event => {
+      $events.forEach(event => {
         try {
           const setter = Object.getOwnPropertyDescriptor(target, 'on' + event).set;
           Object.defineProperty(target, 'on' + event, {
             set(func) {
               if (!func) return;
-              setter.call(this, wrapperFunc(func));
+              setter.call(this, App.eventWrapperFunc(func));
+            }
+
+          });
+        } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
+        }
+      });
+    }
+
+    for (const [name, target] of Object.entries(hookTargets)) {
+      events.forEach(eventName => {
+        try {
+          const setter = Object.getOwnPropertyDescriptor(target, 'on' + eventName).set;
+          Object.defineProperty(target, 'on' + eventName, {
+            set(func) {
+              if (!func) return;
+              const funcProxy = new Proxy(func, {
+                apply(target, thisArg, argumentsList) {
+                  const [event] = argumentsList;
+                  const ret1 = wrapperEvents[eventName](event);
+                  const ret2 = Reflect.apply(target, thisArg, argumentsList);
+                  return ret1 != null ? ret1 : ret2;
+                }
+
+              });
+              setter.call(this, funcProxy);
             }
 
           });
@@ -601,6 +762,7 @@ App.addEventListener = EventTarget.prototype.addEventListener;
 App.removeEventListener = EventTarget.prototype.removeEventListener;
 App.preventDefault = Event.prototype.preventDefault;
 App.returnValueSetter = Object.getOwnPropertyDescriptor(Event.prototype, 'returnValue').set;
+App.siteInfo = void 0;
 
 // import { getGreetings } from './app';
 toggleConsole(true);

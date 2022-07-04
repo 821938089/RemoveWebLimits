@@ -1,4 +1,4 @@
-#rwl-iqxin {
+#rwl {
     position: fixed;
     transform: translate(-95px, 0);
     width: 85px;
@@ -24,7 +24,7 @@
     box-sizing: content-box;
 }
 
-#rwl-iqxin input {
+#rwl input {
     margin: 0;
     padding: 0;
     vertical-align: middle;
@@ -37,7 +37,7 @@
     visibility: visible;
 }
 
-#rwl-iqxin.rwl-active-iqxin {
+#rwl.rwl-active {
     left: 0px;
     transform: translate(0, 0);
     opacity: 0.9;
@@ -45,13 +45,13 @@
     line-height: 32px;
 }
 
-#rwl-iqxin label {
+#rwl label {
     margin: 0;
     padding: 0;
     font-weight: 500;
 }
 
-#rwl-iqxin #rwl-setbtn {
+#rwl #rwl-setbtn {
     margin: 0 4px 0 0;
     padding: 0 0 0 4px;
     border: none;
