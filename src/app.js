@@ -15,14 +15,16 @@
 
 import Setting from './setting'
 import UI from './UI'
-import { domContentLoaded, domMutation } from './lib'
+import { domContentLoaded, domMutation, sleep } from './lib'
 import removeLimitsStyle from './removeLimits.css'
 import { C } from './log'
 import { getSiteInfo } from './rule'
 
 /**@typedef {import('./rule').Site} Site */
 
-console.clear = () => {}
+try {
+  console.clear = () => {}
+} catch (e) {}
 
 class App {
   static host = window.location.hostname
@@ -69,6 +71,8 @@ class App {
     App.addRemoveLimitsCss()
     await domMutation()
     App.registerElementObserve(disableEvents, wrapperEvents)
+    App.hookGlobalEvent(disableEvents, wrapperEvents)
+    await sleep(5000)
     App.hookGlobalEvent(disableEvents, wrapperEvents)
   }
 

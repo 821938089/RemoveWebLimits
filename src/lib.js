@@ -88,3 +88,7 @@ export function setProp(obj, prop, target) {
     
   })
 }
+
+export function sleep(timeout) {
+  return new Promise(resolve => setTimeout(resolve, timeout))
+}

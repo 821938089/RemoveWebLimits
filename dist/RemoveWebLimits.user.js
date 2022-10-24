@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.1.2
+// @version     0.1.3
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -22,29 +22,23 @@
 // 加载设置数据
 class Setting {
   constructor() {
-    this.init(); // https://stackoverflow.com/a/43323115
-
+    this.init();
+    // https://stackoverflow.com/a/43323115
     return new Proxy(this, this);
   }
-
   init() {
     let data = GM_getValue('setting');
-
     if (!data) {
       data = this.defaultSetting();
     }
-
     this._data = data;
   }
-
   save() {
     GM_setValue('setting', this._data);
   }
-
   reset() {
     GM_setValue('setting', this.defaultSetting());
   }
-
   defaultSetting() {
     return {
       positionTop: '0',
@@ -55,17 +49,14 @@ class Setting {
       blackList: []
     };
   }
-
   set(target, prop, value) {
     if (this._data.hasOwnProperty(prop)) {
       this._data[prop] = value;
     } else {
       this[prop] = value;
     }
-
     return true;
   }
-
   get(target, prop) {
     if (this._data.hasOwnProperty(prop)) {
       return this._data[prop];
@@ -73,9 +64,7 @@ class Setting {
       return this[prop];
     }
   }
-
 }
-
 var Setting$1 = new Setting();
 
 // 等待 DOMContentLoaded 事件触发
@@ -86,7 +75,6 @@ function domContentLoaded() {
         window.removeEventListener('DOMContentLoaded', handler);
         resolve();
       }
-
       window.addEventListener('DOMContentLoaded', handler);
     });
   }
@@ -97,7 +85,6 @@ function domMutation() {
       observer.disconnect();
       resolve();
     }, 500);
-
     const observer = new MutationObserver(fn);
     observer.observe(document, {
       childList: true,
@@ -107,13 +94,13 @@ function domMutation() {
   });
 }
 const _regexCache = {};
+
 /**
  * 将字符串编译为正则
  * @param {RegExp | string} obj
  * @param {string} flag
  * @returns {RegExp}
  */
-
 function toRE(obj, flag = 'igm') {
   if (obj instanceof RegExp) {
     return obj;
@@ -139,11 +126,12 @@ function setPropReadOnly(obj, prop, target) {
     get() {
       return value;
     },
-
     set() {},
-
     configurable: true
   });
+}
+function sleep(timeout) {
+  return new Promise(resolve => setTimeout(resolve, timeout));
 }
 
 var css_248z$2 = "#rwl{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl.rwl-active{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl label{font-weight:500;margin:0;padding:0}#rwl #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
@@ -161,7 +149,6 @@ class UI {
     UI.registerUiObserve();
     GM_registerMenuCommand('复制限制解除 设置', () => UI.toggleMenu());
   }
-
   static async initButtonElement() {
     // 等待 DOM 初始化
     await domContentLoaded();
@@ -187,13 +174,11 @@ class UI {
     }, "\u9650\u5236\u89E3\u9664 "), UI.checkBox, VM.hm("style", null, Setting$1.addBtn ? css_248z$2 : css_248z$2 + '#rwl{display:none}'));
     document.body.appendChild(UI.button);
   }
-
   static registerButtonEvent() {
     // 改变窗口大小的情况
     window.onresize = () => {
       UI.button.style.top = `${UI.buttonHeight()}px`;
     };
-
     UI.button.addEventListener('mouseover', () => {
       UI.button.classList.add('rwl-active');
     });
@@ -202,23 +187,22 @@ class UI {
         UI.button.classList.remove('rwl-active');
         UI.updateBlackList(UI.isChecked());
       }, 100);
-    }); // 给按钮绑定点击事件
+    });
 
+    // 给按钮绑定点击事件
     UI.setButton.addEventListener('click', () => UI.toggleMenu());
   }
-
   static isChecked() {
     return UI.checkBox.checked;
   }
-
   static buttonHeight() {
     // 再次打开窗口小于之前窗口的情况,导致按钮出现在可视窗口之外
     const clientHeight = document.documentElement.clientHeight;
     let buttonHeight = Setting$1.positionTop > clientHeight ? clientHeight - 40 : Setting$1.positionTop;
     return buttonHeight < 0 ? 0 : buttonHeight;
-  } // 初始化菜单元素
+  }
 
-
+  // 初始化菜单元素
   static initMenuElement() {
     let settingData;
     UI.menu = VM.hm("div", {
@@ -272,14 +256,12 @@ class UI {
           alert('内容为空');
           return;
         }
-
         try {
           JSON.parse(settingData);
         } catch (e) {
           alert('内容格式有误');
           return;
         }
-
         Setting$1.save();
         window.location.reload();
       }
@@ -295,46 +277,38 @@ class UI {
     }, "--| qxin v4.4.6 2021-06-09 |--"), VM.hm("style", null, css_248z$1));
     document.body.appendChild(UI.menu);
   }
-
   static toggleMenu() {
     UI.checkExist();
     UI.menu.style.display = UI.menu.style.display ? null : 'none';
   }
-
   static checkExist() {
     if (window.self !== window.top) return;
-
     if (!document.querySelector('#rwl')) {
       document.body.appendChild(UI.button);
     }
-
     if (!document.querySelector('#rwl-setMenu')) {
       document.body.appendChild(UI.menu);
     }
   }
-
   static registerUiObserve() {
     const checkExist = _.throttle(() => UI.checkExist(), 1000);
-
     const observer = new MutationObserver(mutations => checkExist());
     observer.observe(document, {
       childList: true,
       subtree: true
     });
-  } // 注册拖动事件
+  }
 
-
+  // 注册拖动事件
   static registerDrag() {
     App.addEventListener.call(UI.button, 'mousedown', event => {
       UI.button.style.transition = 'null';
       var disX = event.clientX - UI.button.offsetLeft;
       var disY = event.clientY - UI.button.offsetTop;
-
       var move = event => {
         UI.button.style.left = event.clientX - disX + 'px';
         UI.button.style.top = event.clientY - disY + 'px';
       };
-
       App.addEventListener.call(document, 'mousemove', move);
       App.addEventListener.call(document, 'mouseup', function mouseUpHandler() {
         UI.button.style.transition = '0.3s';
@@ -347,7 +321,6 @@ class UI {
       });
     });
   }
-
   static updateBlackList(checked) {
     if (checked && !App.inBlackList()) {
       UI.addBlackList();
@@ -356,45 +329,37 @@ class UI {
     } else {
       return;
     }
-
     Setting$1.save();
     window.location.reload();
   }
-
   static addBlackList() {
     Setting$1.blackList.push(window.location.hostname);
   }
-
   static removeBlackList() {
     const host = window.location.hostname;
     const index = Setting$1.blackList.indexOf(host);
     Setting$1.blackList.splice(index, 1);
   }
-
 }
 
 var css_248z = ":not([class*=rwl-exempt]),html{-moz-user-select:text!important;user-select:text!important;-ms-user-select:text!important;-khtml-user-select:text!important}:not([class*=rwl-exempt]) ::-moz-selection{background:#3390ff!important;color:#fff}:not([class*=rwl-exempt]) ::selection{background:#3390ff!important;color:#fff}";
 
 function _extends() {
-  _extends = Object.assign || function (target) {
+  _extends = Object.assign ? Object.assign.bind() : function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
-
       for (var key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
           target[key] = source[key];
         }
       }
     }
-
     return target;
   };
-
   return _extends.apply(this, arguments);
 }
 
 var nullFn = function () {};
-
 var C;
 function toggleConsole(debug) {
   if (debug) {
@@ -420,20 +385,18 @@ function toggleConsole(debug) {
  * @prop {string[]} disableEvents
  * @prop {object} wrapperEvents
  */
-/**@type {Site} */
 
+/**@type {Site} */
 const sites = [{
   siteName: '起点阅读',
   url: 'https://read.qidian.com/chapter/.*?/.*?/',
   disableEvents: ['copy', 'cut', 'contextmenu', 'error'],
   wrapperEvents: {
     $events: [],
-
     click(event) {
       const props = ['screenX', 'screenY', 'clientX', 'clientY', 'pageX', 'pageY'];
       props.forEach(p => setPropReadOnly(event, p, 0));
     }
-
   }
 }];
 
@@ -445,7 +408,6 @@ const sites = [{
  * 获取站点信息
  * @returns {Site}
  */
-
 function getSiteInfo() {
   const {
     href
@@ -456,17 +418,19 @@ function getSiteInfo() {
 }
 
 // global CSS
+
 /**@typedef {import('./rule').Site} Site */
 
-console.clear = () => {};
-
+try {
+  console.clear = () => {};
+} catch (e) {}
 class App {
   /**@type {Site} */
+
   static init() {
     UI.init();
     C.log('脚本: 复制限制解除(改) --- 开始执行 --- ');
     App.siteInfo = getSiteInfo();
-
     if (App.siteInfo) {
       this.initEventDefender(App.siteInfo);
     } else {
@@ -480,11 +444,9 @@ class App {
       }
     }
   }
-
   static inBlackList() {
     return Setting$1.blackList.some(e => e === App.host);
   }
-
   static async initEventDefender(siteInfo) {
     // 自定义规则模式
     C.log('自定义规则模式');
@@ -500,13 +462,14 @@ class App {
     await domMutation();
     App.registerElementObserve(disableEvents, wrapperEvents);
     App.hookGlobalEvent(disableEvents, wrapperEvents);
+    await sleep(5000);
+    App.hookGlobalEvent(disableEvents, wrapperEvents);
   }
-
   static async main() {
     // 自动模式
     // 禁止的事件
-    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste', 'mouseout']; // 忽略阻止默认行为的事件
-
+    const disableEvents = ['copy', 'cut', 'beforeunload', 'contextmenu', 'afterprint', 'beforeprint', 'error', 'mousemove', 'paste', 'mouseout'];
+    // 忽略阻止默认行为的事件
     const wrapperEvents = {
       $events: ['select', 'selectstart', 'dragstart', 'mousedown', 'mouseup', 'keydown', 'keyup', 'keypress']
     };
@@ -519,7 +482,6 @@ class App {
     App.registerElementObserve(disableEvents, wrapperEvents);
     App.hookGlobalEvent(disableEvents, wrapperEvents);
   }
-
   static hookDefaultEvent(wrapperEvents) {
     const {
       $events
@@ -530,23 +492,20 @@ class App {
         if ($events.includes(thisArg.type)) return;
         Reflect.apply(target, thisArg, argumentsList);
       }
-
     });
     Object.defineProperty(Event.prototype, 'returnValue', {
       set(value) {
         if ($events.includes(this.type)) return;
         App.returnValueSetter.call(this, value);
       }
-
     });
   }
-
   static addRemoveLimitsCss() {
     document.head.appendChild(VM.hm("style", null, css_248z));
-  } // 全局事件清理
+  }
+
+  // 全局事件清理
   // 全局事件参考 https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers
-
-
   static hookGlobalEvent(disableEvents, wrapperEvents) {
     const allElements = [...document.getElementsByTagName('*')];
     allElements.push(document, document.body, window);
@@ -555,7 +514,6 @@ class App {
       App.warpperGlobalEvent(element, wrapperEvents);
     });
   }
-
   static hookEventListener(disableEvents, wrapperEvents) {
     const addEventListenerProxy = new Proxy(EventTarget.prototype.addEventListener, {
       apply(target, thisArg, argumentsList) {
@@ -565,7 +523,6 @@ class App {
         } = wrapperEvents;
         const events = Object.keys(wrapperEvents).filter(k => k !== '$events');
         if (disableEvents.includes(type)) return;
-
         if ($events.includes(type)) {
           target.call(thisArg, type, App.eventWrapperFunc(listener), options);
         } else if (events.includes(type)) {
@@ -576,33 +533,28 @@ class App {
               const ret2 = Reflect.apply(target, thisArg, argumentsList);
               return ret1 != null ? ret1 : ret2;
             }
-
           });
           target.call(thisArg, type, listenerProxy, options);
         } else {
           Reflect.apply(target, thisArg, argumentsList);
         }
       }
-
     });
     const removeEventListenerProxy = new Proxy(EventTarget.prototype.removeEventListener, {
       apply(target, thisArg, argumentsList) {
         const [type, listener, options] = argumentsList;
-
         if (listener && listener.hasOwnProperty('wrapperFunc')) {
           target.call(thisArg, type, listener.wrapperFunc, options);
         } else {
           Reflect.apply(target, thisArg, argumentsList);
         }
       }
-
     });
     EventTarget.prototype.addEventListener = addEventListenerProxy;
     document.addEventListener = addEventListenerProxy;
     EventTarget.prototype.removeEventListener = removeEventListenerProxy;
     document.removeEventListener = removeEventListenerProxy;
   }
-
   static registerElementObserve(disableEvents, wrapperEvents) {
     const observer = new MutationObserver(mutations => {
       mutations.forEach(mutationRecord => {
@@ -612,7 +564,6 @@ class App {
           target,
           type
         } = mutationRecord;
-
         switch (type) {
           case 'childList':
             // addedNodes.forEach(element => {
@@ -620,16 +571,13 @@ class App {
             //   App.warpperGlobalEvent(element, wrapperEvents)
             // })
             break;
-
           case 'attributes':
             if (disableEvents.includes(attributeName.slice(2))) {
               target[attributeName] = null;
             }
-
             if (wrapperEvents.includes(attributeName.slice(2))) {
               target[attributeName] = target[attributeName];
             }
-
             break;
         }
       });
@@ -640,19 +588,17 @@ class App {
       attributes: true,
       attributeFilter: disableEvents.concat(wrapperEvents).map(event => 'on' + event)
     });
-  } // 事件包装函数
+  }
 
-
+  // 事件包装函数
   static eventWrapperFunc(func) {
     function wrapper(event) {
       func.call(this, event);
       return true;
     }
-
     func.wrapperFunc = wrapper;
     return wrapper;
   }
-
   static disableGlobalEvent(element, eventList) {
     eventList.forEach(event => {
       if ('removeAttribute' in element && element['on' + event]) {
@@ -660,7 +606,6 @@ class App {
       }
     });
   }
-
   static warpperGlobalEvent(element, wrapperEvents) {
     const {
       $events
@@ -670,22 +615,20 @@ class App {
         element['on' + event] = element['on' + event];
       }
     });
-  } // https://developer.chrome.com/blog/DOM-attributes-now-on-the-prototype-chain/
+  }
+
+  // https://developer.chrome.com/blog/DOM-attributes-now-on-the-prototype-chain/
   // https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers
-
-
   static hookGlobalEvent2(disableEvents, wrapperEvents) {
     App.disableGlobalEvent2(disableEvents);
     App.wrapperGlobalEvent2(wrapperEvents);
   }
-
   static disableGlobalEvent2(eventList) {
     const hookTargets = {
       window: unsafeWindow,
       Document: Document.prototype,
       HTMLElement: HTMLElement.prototype
     };
-
     for (const [name, target] of Object.entries(hookTargets)) {
       eventList.forEach(event => {
         try {
@@ -694,14 +637,13 @@ class App {
             set() {
               setter.call(this, null);
             }
-
           });
-        } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
+        } catch (e) {
+          // C.log(`${name} 没有 ${event} 事件`, e);
         }
       });
     }
   }
-
   static wrapperGlobalEvent2(wrapperEvents) {
     const hookTargets = {
       window: unsafeWindow,
@@ -712,7 +654,6 @@ class App {
       $events
     } = wrapperEvents;
     const events = Object.keys(wrapperEvents).filter(k => k !== '$events');
-
     for (const [name, target] of Object.entries(hookTargets)) {
       $events.forEach(event => {
         try {
@@ -722,13 +663,12 @@ class App {
               if (!func) return;
               setter.call(this, App.eventWrapperFunc(func));
             }
-
           });
-        } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
+        } catch (e) {
+          // C.log(`${name} 没有 ${event} 事件`, e);
         }
       });
     }
-
     for (const [name, target] of Object.entries(hookTargets)) {
       events.forEach(eventName => {
         try {
@@ -743,20 +683,17 @@ class App {
                   const ret2 = Reflect.apply(target, thisArg, argumentsList);
                   return ret1 != null ? ret1 : ret2;
                 }
-
               });
               setter.call(this, funcProxy);
             }
-
           });
-        } catch (e) {// C.log(`${name} 没有 ${event} 事件`, e);
+        } catch (e) {
+          // C.log(`${name} 没有 ${event} 事件`, e);
         }
       });
     }
   }
-
 }
-
 App.host = window.location.hostname;
 App.addEventListener = EventTarget.prototype.addEventListener;
 App.removeEventListener = EventTarget.prototype.removeEventListener;
