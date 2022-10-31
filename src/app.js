@@ -72,8 +72,7 @@ class App {
     await domMutation()
     App.registerElementObserve(disableEvents, wrapperEvents)
     App.hookGlobalEvent(disableEvents, wrapperEvents)
-    await sleep(5000)
-    App.hookGlobalEvent(disableEvents, wrapperEvents)
+    C.log(`${App.host} 清理完成`)
   }
 
   static async main() {
@@ -112,6 +111,7 @@ class App {
     await domMutation()
     App.registerElementObserve(disableEvents, wrapperEvents)
     App.hookGlobalEvent(disableEvents, wrapperEvents)
+    C.log(`${App.host} 清理完成`)
   }
 
   static hookDefaultEvent(wrapperEvents) {
@@ -243,6 +243,8 @@ class App {
     eventList.forEach(event => {
       if ('removeAttribute' in element && element['on' + event]) {
         element.removeAttribute('on' + event)
+      } else if (element['on' + event]) {
+        element['on' + event] = null
       }
     })
   }
@@ -255,6 +257,8 @@ class App {
         element['on' + event] !== App.eventWrapperFunc
       ) {
         element['on' + event] = element['on' + event]
+      } else if (element['on' + event]) {
+        element['on' + event] = null
       }
     })
   }

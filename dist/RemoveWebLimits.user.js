@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.1.3
+// @version     0.1.4
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -129,9 +129,6 @@ function setPropReadOnly(obj, prop, target) {
     set() {},
     configurable: true
   });
-}
-function sleep(timeout) {
-  return new Promise(resolve => setTimeout(resolve, timeout));
 }
 
 var css_248z$2 = "#rwl{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl.rwl-active{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl label{font-weight:500;margin:0;padding:0}#rwl #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
@@ -462,8 +459,7 @@ class App {
     await domMutation();
     App.registerElementObserve(disableEvents, wrapperEvents);
     App.hookGlobalEvent(disableEvents, wrapperEvents);
-    await sleep(5000);
-    App.hookGlobalEvent(disableEvents, wrapperEvents);
+    C.log(`${App.host} 清理完成`);
   }
   static async main() {
     // 自动模式
@@ -481,6 +477,7 @@ class App {
     await domMutation();
     App.registerElementObserve(disableEvents, wrapperEvents);
     App.hookGlobalEvent(disableEvents, wrapperEvents);
+    C.log(`${App.host} 清理完成`);
   }
   static hookDefaultEvent(wrapperEvents) {
     const {
@@ -603,6 +600,8 @@ class App {
     eventList.forEach(event => {
       if ('removeAttribute' in element && element['on' + event]) {
         element.removeAttribute('on' + event);
+      } else if (element['on' + event]) {
+        element['on' + event] = null;
       }
     });
   }
@@ -613,6 +612,8 @@ class App {
     $events.forEach(event => {
       if ('on' + event in element && element['on' + event] !== App.eventWrapperFunc) {
         element['on' + event] = element['on' + event];
+      } else if (element['on' + event]) {
+        element['on' + event] = null;
       }
     });
   }
