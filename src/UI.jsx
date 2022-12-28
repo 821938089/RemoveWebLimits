@@ -23,7 +23,11 @@ class UI {
     const buttonStyle = `position: fixed;
             top: ${UI.buttonHeight()}px;
             left: ${Setting.positionLeft}px;
-            right: ${Setting.positionRight}px;`
+            right: ${
+              Setting.positionRight === 'auto'
+                ? 'auto'
+                : Setting.positionRight + 'px'
+            };`
 
     UI.checkBox = (
       <input type="checkbox" id="black_node" checked={App.inBlackList()} />

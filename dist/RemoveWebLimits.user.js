@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.1.4
+// @version     0.1.5
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -152,7 +152,7 @@ class UI {
     const buttonStyle = `position: fixed;
             top: ${UI.buttonHeight()}px;
             left: ${Setting$1.positionLeft}px;
-            right: ${Setting$1.positionRight}px;`;
+            right: ${Setting$1.positionRight === 'auto' ? 'auto' : Setting$1.positionRight + 'px'};`;
     UI.checkBox = VM.hm("input", {
       type: "checkbox",
       id: "black_node",
@@ -553,6 +553,10 @@ class App {
     document.removeEventListener = removeEventListenerProxy;
   }
   static registerElementObserve(disableEvents, wrapperEvents) {
+    const {
+      $events
+    } = wrapperEvents;
+    const events = Object.keys(wrapperEvents).filter(k => k !== '$events');
     const observer = new MutationObserver(mutations => {
       mutations.forEach(mutationRecord => {
         const {
@@ -569,11 +573,24 @@ class App {
             // })
             break;
           case 'attributes':
-            if (disableEvents.includes(attributeName.slice(2))) {
+            const eventName = attributeName.slice(2);
+            if (disableEvents.includes(eventName)) {
               target[attributeName] = null;
+              break;
             }
-            if (wrapperEvents.includes(attributeName.slice(2))) {
+            if ($events.includes(eventName)) {
               target[attributeName] = target[attributeName];
+            } else if (events.includes(eventName)) {
+              const listener = target[attributeName];
+              const listenerProxy = new Proxy(listener, {
+                apply(target, thisArg, argumentsList) {
+                  const [event] = argumentsList;
+                  const ret1 = wrapperEvents[eventName](event);
+                  const ret2 = Reflect.apply(target, thisArg, argumentsList);
+                  return ret1 != null ? ret1 : ret2;
+                }
+              });
+              target[attributeName] = listenerProxy;
             }
             break;
         }

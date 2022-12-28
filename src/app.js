@@ -194,6 +194,9 @@ class App {
   }
 
   static registerElementObserve(disableEvents, wrapperEvents) {
+    const { $events } = wrapperEvents
+    const events = Object.keys(wrapperEvents).filter(k => k !== '$events')
+
     const observer = new MutationObserver(mutations => {
       mutations.forEach(mutationRecord => {
         const { addedNodes, attributeName, target, type } = mutationRecord
@@ -206,11 +209,24 @@ class App {
             // })
             break
           case 'attributes':
-            if (disableEvents.includes(attributeName.slice(2))) {
+            const eventName = attributeName.slice(2)
+            if (disableEvents.includes(eventName)) {
               target[attributeName] = null
+              break
             }
-            if (wrapperEvents.includes(attributeName.slice(2))) {
+            if ($events.includes(eventName)) {
               target[attributeName] = target[attributeName]
+            } else if (events.includes(eventName)) {
+              const listener = target[attributeName]
+              const listenerProxy = new Proxy(listener, {
+                apply(target, thisArg, argumentsList) {
+                  const [event] = argumentsList
+                  const ret1 = wrapperEvents[eventName](event)
+                  const ret2 = Reflect.apply(target, thisArg, argumentsList)
+                  return ret1 ?? ret2
+                },
+              })
+              target[attributeName] = listenerProxy
             }
             break
           default:
