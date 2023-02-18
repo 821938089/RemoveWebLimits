@@ -20,15 +20,6 @@ class UI {
     // 等待 DOM 初始化
     await domContentLoaded()
 
-    const buttonStyle = `position: fixed;
-            top: ${UI.buttonHeight()}px;
-            left: ${Setting.positionLeft}px;
-            right: ${
-              Setting.positionRight === 'auto'
-                ? 'auto'
-                : Setting.positionRight + 'px'
-            };`
-
     UI.checkBox = (
       <input type="checkbox" id="black_node" checked={App.inBlackList()} />
     )
@@ -41,17 +32,20 @@ class UI {
     )
 
     UI.button = (
-      <div id="rwl" className="rwl-exempt" style={buttonStyle}>
+      <div id="rwl" className="rwl-exempt">
         {UI.setButton}
-        <label style="cursor:move; font-size:12px;">限制解除 </label>
+        <label>限制解除 </label>
         {UI.checkBox}
-        <style>
-          {Setting.addBtn ? buttonCss : buttonCss + '#rwl{display:none}'}
-        </style>
       </div>
     )
 
+    UI.button.style.top = `${UI.buttonHeight()}px`
+    UI.button.style.left = `${Setting.positionLeft}px`
+    UI.button.style.right =
+      Setting.positionRight === 'auto' ? 'auto' : Setting.positionRight + 'px'
+
     document.body.appendChild(UI.button)
+    GM_addStyle(Setting.addBtn ? buttonCss : buttonCss + '#rwl{display:none}')
   }
 
   static registerButtonEvent() {
@@ -93,7 +87,7 @@ class UI {
   static initMenuElement() {
     let settingData
     UI.menu = (
-      <div id="rwl-setMenu" style="display: none;">
+      <div id="rwl-setMenu">
         <p>
           距离顶部距离（单位 像素）{' '}
           <input
@@ -236,11 +230,13 @@ class UI {
           关闭
         </button>{' '}
         &nbsp;&nbsp;&nbsp;
-        <span style="font-size:0.7em;">--| qxin v4.4.6 2021-06-09 |--</span>
-        <style>{menuCss}</style>
+        <span>--| qxin v4.4.6 2021-06-09 |--</span>
       </div>
     )
+    UI.menu.style.display = "none"
+
     document.body.appendChild(UI.menu)
+    GM_addStyle(menuCss)
   }
 
   static toggleMenu() {

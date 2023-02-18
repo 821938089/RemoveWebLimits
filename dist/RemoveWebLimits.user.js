@@ -4,7 +4,7 @@
 // @namespace   https://github.com/821938089/RemoveWebLimits
 // @description Remove Web Limits
 // @match       *://*/*
-// @version     0.1.5
+// @version     0.1.6
 // @author      Horis
 // @run-at      document-start
 // @require     https://cdn.staticfile.org/underscore.js/1.7.0/underscore-min.js
@@ -131,9 +131,9 @@ function setPropReadOnly(obj, prop, target) {
   });
 }
 
-var css_248z$2 = "#rwl{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl.rwl-active{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl label{font-weight:500;margin:0;padding:0}#rwl #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
+var css_248z$2 = "#rwl{background:#333;border:1px solid #ccc;border-bottom-right-radius:5px;border-left-width:0;box-sizing:initial;color:#fff;font-family:Verdana,Arial,宋体;font-size:12px;font-weight:500;height:25px;line-height:25px;margin:0;opacity:.05;overflow:hidden;padding:0 16px;position:fixed;text-align:center;transform:translate(-95px);transition:.3s;-moz-user-select:none;user-select:none;white-space:nowrap;width:85px;z-index:2147483647}#rwl input{clip:auto;-webkit-appearance:checkbox;-moz-appearance:checkbox;cursor:pointer;margin:0;opacity:1;padding:0;position:static;vertical-align:middle;visibility:visible}#rwl.rwl-active{height:32px;left:0;line-height:32px;opacity:.9;transform:translate(0)}#rwl label{cursor:move;font-size:12px;font-weight:500;margin:0;padding:0}#rwl #rwl-setbtn{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0 4px 0 0;padding:0 0 0 4px}";
 
-var css_248z$1 = "#rwl-reset,#rwl-setMenuClose,#rwl-setMenuSave{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0;padding:0 2px}#rwl-reset{border:1px solid #666}#rwl-setMenuSave{border:1px solid green}#rwl-setMenuClose{border:1px solid red}#rwl-setMenu{border:1px solid #6495ed;font-size:14px;line-height:normal;text-align:left;z-index:999999}#rwl-setMenu p{margin:5px auto}#rwl-setMenu{background:#fff;border-radius:4px;left:50px;padding:10px;position:fixed;top:5px}#rwl-setMenu>textarea{font:unset}";
+var css_248z$1 = "#rwl-reset,#rwl-setMenuClose,#rwl-setMenuSave{background:#fff;border:none;border-radius:2px;color:#000;cursor:pointer;margin:0;padding:0 2px}#rwl-reset{border:1px solid #666}#rwl-setMenuSave{border:1px solid green}#rwl-setMenuClose{border:1px solid red}#rwl-setMenu{border:1px solid #6495ed;font-size:14px;line-height:normal;text-align:left;z-index:999999}#rwl-setMenu p{margin:5px auto}#rwl-setMenu{background:#fff;border-radius:4px;left:50px;padding:10px;position:fixed;top:5px}#rwl-setMenu>textarea{font:unset}#rwl-setMenu>span{font-size:.7em}";
 
 class UI {
   static async init() {
@@ -149,10 +149,6 @@ class UI {
   static async initButtonElement() {
     // 等待 DOM 初始化
     await domContentLoaded();
-    const buttonStyle = `position: fixed;
-            top: ${UI.buttonHeight()}px;
-            left: ${Setting$1.positionLeft}px;
-            right: ${Setting$1.positionRight === 'auto' ? 'auto' : Setting$1.positionRight + 'px'};`;
     UI.checkBox = VM.hm("input", {
       type: "checkbox",
       id: "black_node",
@@ -164,12 +160,13 @@ class UI {
     }, ' ', "set", ' ');
     UI.button = VM.hm("div", {
       id: "rwl",
-      className: "rwl-exempt",
-      style: buttonStyle
-    }, UI.setButton, VM.hm("label", {
-      style: "cursor:move; font-size:12px;"
-    }, "\u9650\u5236\u89E3\u9664 "), UI.checkBox, VM.hm("style", null, Setting$1.addBtn ? css_248z$2 : css_248z$2 + '#rwl{display:none}'));
+      className: "rwl-exempt"
+    }, UI.setButton, VM.hm("label", null, "\u9650\u5236\u89E3\u9664 "), UI.checkBox);
+    UI.button.style.top = `${UI.buttonHeight()}px`;
+    UI.button.style.left = `${Setting$1.positionLeft}px`;
+    UI.button.style.right = Setting$1.positionRight === 'auto' ? 'auto' : Setting$1.positionRight + 'px';
     document.body.appendChild(UI.button);
+    GM_addStyle(Setting$1.addBtn ? css_248z$2 : css_248z$2 + '#rwl{display:none}');
   }
   static registerButtonEvent() {
     // 改变窗口大小的情况
@@ -203,8 +200,7 @@ class UI {
   static initMenuElement() {
     let settingData;
     UI.menu = VM.hm("div", {
-      id: "rwl-setMenu",
-      style: "display: none;"
+      id: "rwl-setMenu"
     }, VM.hm("p", null, "\u8DDD\u79BB\u9876\u90E8\u8DDD\u79BB\uFF08\u5355\u4F4D \u50CF\u7D20\uFF09", ' ', VM.hm("input", {
       id: "positiontop",
       type: "text",
@@ -269,10 +265,10 @@ class UI {
         Setting$1.init();
       },
       title: "\u5982\u679C\u65E0\u6CD5\u5173\u95ED \u8BF7\u5237\u65B0\u754C\u9762"
-    }, "\u5173\u95ED"), ' ', "\xA0\xA0\xA0", VM.hm("span", {
-      style: "font-size:0.7em;"
-    }, "--| qxin v4.4.6 2021-06-09 |--"), VM.hm("style", null, css_248z$1));
+    }, "\u5173\u95ED"), ' ', "\xA0\xA0\xA0", VM.hm("span", null, "--| qxin v4.4.6 2021-06-09 |--"));
+    UI.menu.style.display = "none";
     document.body.appendChild(UI.menu);
+    GM_addStyle(css_248z$1);
   }
   static toggleMenu() {
     UI.checkExist();
@@ -425,6 +421,12 @@ class App {
   /**@type {Site} */
 
   static init() {
+    try {
+      // https://github.com/Tampermonkey/tampermonkey/issues/1498
+      if (!document.contentType.includes('html')) {
+        return;
+      }
+    } catch (e) {}
     UI.init();
     C.log('脚本: 复制限制解除(改) --- 开始执行 --- ');
     App.siteInfo = getSiteInfo();

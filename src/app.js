@@ -39,6 +39,12 @@ class App {
   static siteInfo
 
   static init() {
+    try {
+      // https://github.com/Tampermonkey/tampermonkey/issues/1498
+      if (!document.contentType.includes('html')) {
+        return
+      }
+    } catch (e) {}
     UI.init()
     C.log('脚本: 复制限制解除(改) --- 开始执行 --- ')
     App.siteInfo = getSiteInfo()
